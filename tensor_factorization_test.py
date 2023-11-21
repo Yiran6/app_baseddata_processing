@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import tensorly as tl
 from tensorly.decomposition import tucker
+from tensorly.decomposition import non_negative_tucker
 import math
 from scipy import stats
 import csv
@@ -88,15 +89,39 @@ for i in os.listdir(path):
         
 arr = data2arr(raw_dt_path[0], to2d=False)
 
-starttime = time.time()
+
 
 rank_individuals = 10
 rank_locations = 10
 rank_times = 12
 
+#tensor factorization
+starttime = time.time()
 core, factors = tucker(arr, rank=[rank_individuals, rank_locations, rank_times])
 endtime = time.time()
-print(f'running time {endtime-starttime}')
+runningtime_tf = endtime-starttime
+print(f'running time tf: {runningtime_tf}')
+reconstructed_data = tl.tucker_to_tensor((core, factors)) 
+rmse_score = rmse(arr, reconstructed_data, squared=False)
+mae_score = rmse(arr, reconstructed_data, squared=True)
+print(f'rmse tf ={rmse_score}')
+write_contents_tf = [rank_individuals, rank_locations, rank_times, runningtime_tf, rmse_score, mae_score, 'tf']
 
-print(f'rmse ={rmse(arr, reconstructed_data, squared=False)}')
+#non negative 
+starttime = time.time()
+core, factors = non_negative_tucker(arr, rank=[rank_individuals, rank_locations, rank_times])
+endtime = time.time()
+runningtime_nntf = endtime-starttime
+reconstructed_data = tl.ttensors_to_tensor(core, factors)
+rmse_score = rmse(arr, reconstructed_data, squared=False)
+mae_score = rmse(arr, reconstructed_data, squared=True)
+print(f'rmse nntf ={rmse_score}')
+print(f'running time nntf: {runningtime_nntf}')
+write_contents_nntf = [rank_individuals, rank_locations, rank_times, runningtime_nntf, rmse_score, mae_score, 'nntf']
+
+print(write_contents_tf)
+print(write_contents_nntf)
+with open('G:/My Drive/2021/Bias/tf_results.txt', 'a') as f:
+    f.write(f'{write_contents_tf}\n')
+    f.write(f'{write_contents_nntf}\n')
 #def main():
