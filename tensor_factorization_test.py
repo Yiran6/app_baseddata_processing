@@ -13,7 +13,7 @@ from scipy import stats
 import csv
 from matplotlib.pyplot import figure
 import matplotlib
-from sklearn.metrics import mean_squared_error as rmse
+#from sklearn.metrics import mean_squared_error as rmse
 import time
 
 #defined functions
@@ -78,6 +78,13 @@ def data2arr(datapath, binaryidx=True, to2d=True):
                 arr[i, j, k] = sum
         return(arr)
     
+def cal_rmse(true_dt, pred_dt):
+    squared_diff = (true_dt-pred_dt)**2
+    mean_squared_diff = np.mean(squared_diff)
+    rmse = np.sqrt(mean_squared_diff)
+    return(rmse)
+    
+    
 #process the fcd data
 path = "G:/My Drive/2021/Bias/sumo_simulation/"
 #os.listdir()
@@ -91,37 +98,58 @@ arr = data2arr(raw_dt_path[0], to2d=False)
 
 
 
-rank_individuals = 10
-rank_locations = 10
-rank_times = 12
+rank_individuals = [10, 50, 100]
+rank_locations = [10, 50]
+rank_times = [12, 24, 48]
 
 #tensor factorization
-starttime = time.time()
-core, factors = tucker(arr, rank=[rank_individuals, rank_locations, rank_times])
-endtime = time.time()
-runningtime_tf = endtime-starttime
-print(f'running time tf: {runningtime_tf}')
-reconstructed_data = tl.tucker_to_tensor((core, factors)) 
-rmse_score = rmse(arr, reconstructed_data, squared=False)
-mae_score = rmse(arr, reconstructed_data, squared=True)
-print(f'rmse tf ={rmse_score}')
-write_contents_tf = [rank_individuals, rank_locations, rank_times, runningtime_tf, rmse_score, mae_score, 'tf']
+def tf(rank_individuals, rank_locations, rank_times):
+    try:
+        starttime = time.time()
+        core, factors = tucker(arr, rank=[rank_individuals, rank_locations, rank_times])
+        endtime = time.time()
+        runningtime_tf = endtime-starttime
+        print(f'running time tf: {runningtime_tf}')
+        reconstructed_data = tl.tucker_to_tensor((core, factors)) 
+        rmse_score = cal_rmse(arr, reconstructed_data)
+    except:
+        runningtime_tf = -1
+        rmse_score = -1
+    #mae_score = rmse(arr, reconstructed_data, squared=True)
+    print(f'rmse tf ={rmse_score}')
+    write_contents_tf = [rank_individuals, rank_locations, rank_times, runningtime_tf, rmse_score, 'tf']
+    return(write_contents_tf)
 
 #non negative 
-starttime = time.time()
-core, factors = non_negative_tucker(arr, rank=[rank_individuals, rank_locations, rank_times])
-endtime = time.time()
-runningtime_nntf = endtime-starttime
-reconstructed_data = tl.ttensors_to_tensor(core, factors)
-rmse_score = rmse(arr, reconstructed_data, squared=False)
-mae_score = rmse(arr, reconstructed_data, squared=True)
-print(f'rmse nntf ={rmse_score}')
-print(f'running time nntf: {runningtime_nntf}')
-write_contents_nntf = [rank_individuals, rank_locations, rank_times, runningtime_nntf, rmse_score, mae_score, 'nntf']
+def tensor_nntf(rank_individuals, rank_locations, rank_times):
+    
+    try:
+        starttime = time.time()
+        core, factors = non_negative_tucker(arr, rank=[rank_individuals, rank_locations, rank_times])
+        endtime = time.time()
+        runningtime_nntf = endtime-starttime
+        reconstructed_data = tl.tensors_to_tensor(core, factors)
+        rmse_score = cal_rmse(arr, reconstructed_data)
+    except:
+        runningtime_nntf = -1
+        rmse_score = -1
+    #mae_score = rmse(arr, reconstructed_data, squared=True)
+    print(f'rmse nntf ={rmse_score}')
+    print(f'running time nntf: {runningtime_nntf}')
+    write_contents_nntf = [rank_individuals, rank_locations, rank_times, runningtime_nntf, rmse_score, 'nntf']
+    return(write_contents_nntf)
 
-print(write_contents_tf)
-print(write_contents_nntf)
-with open('G:/My Drive/2021/Bias/tf_results.txt', 'a') as f:
-    f.write(f'{write_contents_tf}\n')
-    f.write(f'{write_contents_nntf}\n')
+#print(write_contents_tf)
+#print(write_contents_nntf)
+for i in rank_individuals:
+    for j in rank_locations:
+        for k in rank_times:
+            print(i, j, k)
+            write_contents_tf = tf(i, j, k)
+            write_contents_nntf = tensor_nntf(i, j, k)
+            with open('G:/My Drive/2021/Bias/tf_results.txt', 'a') as f:
+                f.write(f'{write_contents_tf}\n')
+                f.write(f'{write_contents_nntf}\n')
+            
+f.close()
 #def main():

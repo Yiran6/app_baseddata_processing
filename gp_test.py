@@ -316,7 +316,7 @@ taz_latlon = taz_latlon.sort_values(by=['dist2510'])
 taz_latlon.reset_index(inplace=True)
 taz_latlon.drop('index', inplace=True, axis=1)
 
-time_interval = 5
+time_interval = 15
 arr1 = get_data_newinterval(time_interval, arr04042017)
 arr2 = get_data_newinterval(time_interval, arr04052017)
 
