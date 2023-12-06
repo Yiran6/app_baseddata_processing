@@ -103,7 +103,7 @@ rank_locations = [10, 50]
 rank_times = [12, 24, 48]
 
 #tensor factorization
-def tf(rank_individuals, rank_locations, rank_times):
+def tf(rank_individuals, rank_locations, rank_times, savepred):
     try:
         starttime = time.time()
         core, factors = tucker(arr, rank=[rank_individuals, rank_locations, rank_times])
@@ -112,12 +112,15 @@ def tf(rank_individuals, rank_locations, rank_times):
         print(f'running time tf: {runningtime_tf}')
         reconstructed_data = tl.tucker_to_tensor((core, factors)) 
         rmse_score = cal_rmse(arr, reconstructed_data)
+        if savepred == True:
+            np.savetxt(path+'pred_test.txt', reconstructed_data)
     except:
         runningtime_tf = -1
         rmse_score = -1
     #mae_score = rmse(arr, reconstructed_data, squared=True)
     print(f'rmse tf ={rmse_score}')
     write_contents_tf = [rank_individuals, rank_locations, rank_times, runningtime_tf, rmse_score, 'tf']
+    
     return(write_contents_tf)
 
 #non negative 
@@ -141,7 +144,8 @@ def tensor_nntf(rank_individuals, rank_locations, rank_times):
 
 #print(write_contents_tf)
 #print(write_contents_nntf)
-for i in rank_individuals:
+write_td = tf(10, 2, 2, True)
+'''for i in rank_individuals:
     for j in rank_locations:
         for k in rank_times:
             print(i, j, k)
@@ -152,4 +156,4 @@ for i in rank_individuals:
                 f.write(f'{write_contents_nntf}\n')
             
 f.close()
-#def main():
+#def main():'''
