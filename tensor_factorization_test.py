@@ -112,8 +112,8 @@ def tf(rank_individuals, rank_locations, rank_times, savepred):
         print(f'running time tf: {runningtime_tf}')
         reconstructed_data = tl.tucker_to_tensor((core, factors)) 
         rmse_score = cal_rmse(arr, reconstructed_data)
-        if savepred == True:
-            np.savetxt(path+'pred_test.txt', reconstructed_data)
+        if printpred == True:
+            print(reconstructed_data)
     except:
         runningtime_tf = -1
         rmse_score = -1
